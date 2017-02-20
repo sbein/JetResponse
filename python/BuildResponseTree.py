@@ -2,22 +2,6 @@
 # Date created: Feb 20, 2017
 ############################
 
-# Welcome to my idiosynchratic code framework that runs on Kevin's ntuples. I wrote
-# this mostly yesterday. The code creates a tree that will be used for
-# density regression to extract the jet response, based on tag and probe.
-
-# Regression inputs: 
-# 1. Tag pT (tag is the well-reconstructed pT in the event)
-# 2. Probe eta (probe is the leading jet)
-# 3. Alpha (Measure of the additional jet activity, using the Niedziela Projection)
-# Regression target:
-# response = pT(probe)/pT(tag)
-
-# To run this code interactively, do
-# python python/BuildResponseTree.py MC_GJets 2016 quickrun
-
-# quickrun tells the code to only run over a few files. you can leave this off and
-# the code will analyze all events
 
 import os, sys
 from ROOT import *
@@ -121,11 +105,11 @@ jetEta = np.zeros(1,dtype=float)
 phoPt = np.zeros(1,dtype=float)
 alpha = np.zeros(1,dtype=float)
 response = np.zeros(1,dtype=float)#target for regressions
-t = TTree('tPhotonJetTree','tPhotonJetTree')
-t.Branch('jetEta', jetEta,'jetEta/D')
-t.Branch('phoPt', phoPt,'phoPt/D')
-t.Branch('alpha', alpha,'alpha/D')
-t.Branch('response', response,'response/D')
+tPhotonJetTree = TTree('tPhotonJetTree','tPhotonJetTree')
+tPhotonJetTree.Branch('jetEta', jetEta,'jetEta/D')
+tPhotonJetTree.Branch('phoPt', phoPt,'phoPt/D')
+tPhotonJetTree.Branch('alpha', alpha,'alpha/D')
+tPhotonJetTree.Branch('response', response,'response/D')
 
 #set up event chain
 t = TChain('TreeMaker2/PreSelection')
@@ -218,7 +202,7 @@ for ientry in range(nEvents):
     
     response[0] = recojets[0].Pt()/phoPt[0]
 
-    t.Fill()
+    tPhotonJetTree.Fill()
     
     for iact in range(1, templateEtaAxis.GetNbins()):
         act_thresh = templateActAxis.GetBinLowEdge(iact)
@@ -242,7 +226,7 @@ for ientry in range(nEvents):
             hResGenTemplates[ieta][ipt][iact].Fill(genresponse)
 
 #write tree to file
-t.Write()
+tPhotonJetTree.Write()
 
 #write histograms to file
 for etachain in hResGenTemplates[1:]:
