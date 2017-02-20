@@ -5,13 +5,16 @@ Welcome to an idiosynchratic code framework. The goal is to extract the detector
 Inputs to the regression:
  1. Tag pT (tag is the well-reconstructed pT in the event)
  2. Probe eta (probe is the leading jet)
- 3. Alpha (Measure of the additional jet activity, using the Niedziela Projection)\n
-Regression target:\n
- response = pT(probe)/pT(tag)
+ 3. Alpha (Measure of the additional jet activity, using the Niedziela Projection)
+
+Regression target:
+
+response = pT(probe)/pT(tag)
 
 #Running the code
- To run this code interactively, do \n
- python python/BuildResponseTree.py MC_GJets 2016 quickrun
-
- quickrun tells the code to only run over a few files. you can leave this off and
+To run this code interactively, do
+```
+python python/BuildResponseTree.py MC_GJets 2016 quickrun
+```
+quickrun tells the code to only run over a few files. you can leave this off and
 the code will analyze all events
