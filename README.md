@@ -16,5 +16,4 @@ To run this code interactively, do
 ```
 python python/BuildResponseTree.py MC_GJets 2016 quickrun
 ```
-quickrun tells the code to only run over a few files. you can leave this off and
-the code will analyze all events
+MC tells the code the events are from monte carlo. GJets is the physics process and is matched to the data set name in the code. quickrun tells the code to only run over a few files. you can leave this off and all events will be analyzed.
