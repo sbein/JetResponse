@@ -10,7 +10,7 @@ from array import array
 import numpy as np
 
 pwd = '/uscms_data/d3/sbein/Ra2slashB2016/Nov2016/CMSSW_8_0_22/src/JetResponse'
-filenametag = 'ImprovedActivity'
+filenametag = ''
 try: datasetID = sys.argv[1]
 except: datasetID = 'MC_QCD'
 physicsProcess = datasetID[datasetID.find('_')+1:]
@@ -54,7 +54,7 @@ hDeltaPhiJetPhoton = TH1F('hDeltaPhiJetPhoton','hDeltaPhiJetPhoton',100,0,3.2)
 histoStyler(hRatioEtaJetPhoton, kBlue)
 
 #define dimensions of the problem and book axes that have the binning built in.
-binPt = [0,20, 30, 100, 500, 1000, 10000]
+binPt = [0, 30, 100, 500, 1000, 10000]
 binPtArr = array('d',binPt)
 nBinPt = len(binPtArr)-1
 hPtTemplate = TH1F('hPtTemplate','hPtTemplate',nBinPt,binPtArr)
@@ -99,12 +99,13 @@ for ieta in range(1,templateEtaAxis.GetNbins()+1):
           if start: hResInfTemplates[-1].append([''])
           hResInfTemplates[-1][-1].append(hinf)
           start = False    
+hResInfInclusive = TH1F('hResInfInclusive','pt(gen)',nbins,0,rupper)
 
 #declare a nice tree on which the anlaysis will be based
 jetEta = np.zeros(1,dtype=float)
 phoPt = np.zeros(1,dtype=float)
 alpha = np.zeros(1,dtype=float)
-response = np.zeros(1,dtype=float)#target for regressions
+response = np.zeros(1,dtype=float)#target for regression
 tPhotonJetTree = TTree('tPhotonJetTree','tPhotonJetTree')
 tPhotonJetTree.Branch('jetEta', jetEta,'jetEta/D')
 tPhotonJetTree.Branch('phoPt', phoPt,'phoPt/D')
@@ -122,12 +123,12 @@ for rawfile in rawfiles:
     elif 'GJets' in physicsProcess:
         if not '.'+physicsProcess in rawfile: continue
     elif not physicsProcess in rawfile: continue
-    print 'checking out', rawfile.strip()
+    #print 'checking out', rawfile.strip()
     filelist.append(rawfile.strip())
 
 if quickrun: 
     print "files=",filelist[:1]
-    for f in filelist[:10]: 
+    for f in filelist[:15]: 
         t.Add('root://cmsxrootd.fnal.gov//store/user/lpcsusyhad/SusyRA2Analysis2015/Run2ProductionV12/'+f)
         break
     nEvents = min(100000,t.GetEntries())
@@ -179,8 +180,10 @@ for ientry in range(nEvents):
         photonBlob+=photon
 
 
-    PhotonJetSystem = photonBlob
-    PhotonJetSystem += recojets[0].tlv
+    PhotonJetSystem = photonBlob.Clone()
+    probevec = recojets[0].tlv.Clone()
+    probevec *= photonBlob.Pt()/probevec.Pt()
+    PhotonJetSystem += probevec
     
     deltaphi = abs(photonBlob.DeltaPhi(recojets[0].tlv))
     hDeltaPhiJetPhoton.Fill(deltaphi)
@@ -203,12 +206,14 @@ for ientry in range(nEvents):
     response[0] = recojets[0].Pt()/phoPt[0]
 
     tPhotonJetTree.Fill()
+    hResInfInclusive.Fill(response[0])
     
-    for iact in range(1, templateEtaAxis.GetNbins()):
+    for iact in range(1, templateActAxis.GetNbins()+1):
         act_thresh = templateActAxis.GetBinLowEdge(iact)
-        if not (alpha < act_thresh): continue
+        if not (alpha[0] < act_thresh): continue
 
         #resolution w.r.t. pho
+        #print 'activity', alpha[0], hResInfTemplates[ieta][ipt][iact].GetName()
         hResInfTemplates[ieta][ipt][iact].Fill(response[0])
 
         #resolution w.r.t. gen
@@ -227,13 +232,13 @@ for ientry in range(nEvents):
 
 #write tree to file
 tPhotonJetTree.Write()
-
+hResInfInclusive.Write()
 #write histograms to file
-for etachain in hResGenTemplates[1:]:
+for etachain in hResInfTemplates[1:]:
     for hrat in etachain[1:]:
         for h in hrat[1:]:
             h.Write()
-for etachain in hResInfTemplates[1:]:
+for etachain in hResGenTemplates[1:]:
     for hrat in etachain[1:]:
         for h in hrat[1:]:
             h.Write()
